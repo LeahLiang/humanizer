@@ -37,7 +37,7 @@
 
    建议写入 `~/.zshrc` / `~/.bashrc` 持久化。
 
-> 每个账号只保留一把 active key。若想轮换，向同一接口传 `{"rotate": true}`，旧 key 会立即失效。
+> 每个账号只保留一把 active key。若要轮换，请到 **ushallpass.ai** 的账户 / 设置面板里重新 **生成 API Key**（不要依赖接口轮换）；新 key 生效后，旧 key 会立即失效。
 >
 > **关于 API base URL**：账号后台在 `ushallpass.ai`，但 API 本身的域名是 `https://leahloveswriting.xyz`（环境变量 `HUMANIZER_API_BASE_URL` 的默认值）。一般情况不需要修改。
 

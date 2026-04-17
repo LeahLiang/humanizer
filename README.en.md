@@ -37,7 +37,7 @@ A [Claude Code](https://claude.com/claude-code) skill that lets Claude rewrite p
 
    Add the line to `~/.zshrc` / `~/.bashrc` to persist it.
 
-> Each account keeps one active key. To rotate, hit the same endpoint with `{"rotate": true}`; the old key becomes invalid.
+> Each account keeps one active key. To rotate, open the account / settings panel on **ushallpass.ai** and **Generate API Key** again (do not use an API rotate call). Once the new key is issued, the old key stops working immediately.
 >
 > **Note on the API base URL.** The account / dashboard lives on `ushallpass.ai`, but the API itself is served from `https://leahloveswriting.xyz` (the default for `HUMANIZER_API_BASE_URL`). You do not need to change this unless self-hosting.
 
