@@ -27,7 +27,7 @@
 ## 1. 获取 API Key
 
 1. 在 **<https://ushallpass.ai>** 注册并登录——账号、额度、写作历史、检测历史都在这里。
-2. 打开账户 / 设置面板，点击 **生成 API Key**。
+2. 打开网页右上角账户名下拉菜单，点击 **生成 API Key**。
 3. **立即**复制明文 key——它只会显示一次。
 4. 在 Shell 中导出为环境变量：
 
@@ -37,7 +37,7 @@
 
    建议写入 `~/.zshrc` / `~/.bashrc` 持久化。
 
-> 每个账号只保留一把 active key。若要轮换，请到 **ushallpass.ai** 的账户 / 设置面板里重新 **生成 API Key**（不要依赖接口轮换）；新 key 生效后，旧 key 会立即失效。
+> 每个账号只保留一把 active key。若要轮换，请到 **ushallpass.ai** 的账户 / 设置面板里重新 **生成 API Key** ；新 key 生效后，旧 key 会立即失效。
 >
 > **关于 API base URL**：账号后台在 `ushallpass.ai`，但 API 本身的域名是 `https://leahloveswriting.xyz`（环境变量 `HUMANIZER_API_BASE_URL` 的默认值）。一般情况不需要修改。
 

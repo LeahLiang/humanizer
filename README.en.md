@@ -27,7 +27,7 @@ A [Claude Code](https://claude.com/claude-code) skill that lets Claude rewrite p
 ## 1. Getting an API key
 
 1. Register and log in at **<https://ushallpass.ai>** — this is where your account, quota, writing history and detection history live.
-2. Open the account / settings panel and click **Generate API Key**.
+2. In the top-right corner of the page, open the dropdown under your account name and click **Generate API Key**.
 3. Copy the plaintext key immediately — it is shown only once.
 4. Export it in your shell:
 
@@ -37,7 +37,7 @@ A [Claude Code](https://claude.com/claude-code) skill that lets Claude rewrite p
 
    Add the line to `~/.zshrc` / `~/.bashrc` to persist it.
 
-> Each account keeps one active key. To rotate, open the account / settings panel on **ushallpass.ai** and **Generate API Key** again (do not use an API rotate call). Once the new key is issued, the old key stops working immediately.
+> Each account keeps one active key. To rotate, open the account / settings panel on **ushallpass.ai** and **Generate API Key** again. Once the new key is issued, the old key stops working immediately.
 >
 > **Note on the API base URL.** The account / dashboard lives on `ushallpass.ai`, but the API itself is served from `https://leahloveswriting.xyz` (the default for `HUMANIZER_API_BASE_URL`). You do not need to change this unless self-hosting.
 
