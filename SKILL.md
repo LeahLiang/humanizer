@@ -12,7 +12,7 @@ Two capabilities:
 1. **Rewrite (humanize)** — lowers the AI-detector score while preserving meaning.
 2. **Detect** — tells you whether a passage is likely AI-written.
 
-All endpoints are asynchronous: submit a job, then poll a task id. The helper script `scripts/humanizer_client.py` handles submission and polling for you.
+All endpoints are asynchronous: submit a job, then poll a task id.
 
 ## Prerequisites
 
@@ -35,34 +35,25 @@ Invoke when the user asks to:
 
 Do **not** invoke for general paraphrasing that can be done inline — this skill is for cases where the user specifically wants to lower an AI-detector score (the models are tuned for detector evasion, not stylistic rewriting).
 
-## How to run
+## Execution workflow
 
-Use the bundled CLI. It auto-polls until the job finishes.
+Handle requests through natural-language interaction.
 
-```bash
-# Rewrite Chinese (mode: light | aggressive | weipu | weipu_aggressive)
-python scripts/humanizer_client.py rewrite zh --mode light --text "待改写的中文文本"
-
-# Rewrite English
-python scripts/humanizer_client.py rewrite en --text "Text to rewrite"
-
-# Detect Chinese / English
-python scripts/humanizer_client.py detect zh --text "待检测的中文文本"
-python scripts/humanizer_client.py detect en --text "Text to check"
-
-# Read input from a file or stdin
-python scripts/humanizer_client.py rewrite zh --file input.txt
-cat input.txt | python scripts/humanizer_client.py rewrite zh
-```
-
-Flags:
-
-- `--mode`: Chinese rewrite only. Default `light`. Use `aggressive` when the user wants stronger rewriting, `weipu` / `weipu_aggressive` for 维普 detector-tuned output.
-- `--timeout`: max seconds to wait (default 180).
-- `--poll-interval`: seconds between polls (default 2).
-- `--json`: emit raw JSON instead of just the rewritten / detection result.
-
-Exit code is `0` on success, non-zero on failure; stderr carries the error message.
+1. Identify intent:
+   - Rewrite / humanize text to lower detector score.
+   - Detect whether text is AI-generated.
+2. Identify language:
+   - Chinese (`zh`) or English (`en`).
+3. For Chinese rewrite, select mode using user intent:
+   - Default `light`.
+   - `aggressive` when user asks for stronger rewrite.
+   - `weipu` / `weipu_aggressive` when user explicitly targets 维普.
+4. Before heavy Chinese modes (`aggressive`, `weipu_aggressive`), explicitly warn about 2x quota cost.
+5. Submit async job, poll until completion, then return the final result to the user.
+6. Response style:
+   - Show clear "original -> rewritten" output for rewrite tasks.
+   - Show label/perplexity and short interpretation for detect tasks.
+   - If errors occur, explain actionable next steps in plain language.
 
 ## Choosing a Chinese rewrite mode
 
@@ -78,7 +69,7 @@ Rules of thumb:
 - Default to `light` if the user does not specify.
 - Pick `aggressive` only when the user says 力度大一点 / 降得狠一点 / 还是标红太多 — and **warn them it costs 2× quota** before submitting.
 - Pick `weipu` / `weipu_aggressive` only when the user explicitly targets 维普. Same 2× cost warning applies for `weipu_aggressive`.
-- English rewrite has a single mode; `--mode` is ignored and cost is always 1× word count.
+- English rewrite has a single mode and cost is always 1× word count.
 
 ## Interpreting detection results
 
