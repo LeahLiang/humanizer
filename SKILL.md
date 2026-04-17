@@ -35,25 +35,52 @@ Invoke when the user asks to:
 
 Do **not** invoke for general paraphrasing that can be done inline — this skill is for cases where the user specifically wants to lower an AI-detector score (the models are tuned for detector evasion, not stylistic rewriting).
 
-## Execution workflow
+## Execution workflow (API-first)
 
-Handle requests through natural-language interaction.
+Handle requests through natural-language interaction, and execute via `/api_v2` directly.
 
 1. Identify intent:
-   - Rewrite / humanize text to lower detector score.
-   - Detect whether text is AI-generated.
+ - Rewrite / humanize text to lower detector score.
+ - Detect whether text is AI-generated.
 2. Identify language:
-   - Chinese (`zh`) or English (`en`).
+ - Chinese (`zh`) or English (`en`).
 3. For Chinese rewrite, select mode using user intent:
-   - Default `light`.
-   - `aggressive` when user asks for stronger rewrite.
-   - `weipu` / `weipu_aggressive` when user explicitly targets 维普.
+ - Default `light`.
+ - `aggressive` when user asks for stronger rewrite.
+ - `weipu` / `weipu_aggressive` when user explicitly targets 维普.
 4. Before heavy Chinese modes (`aggressive`, `weipu_aggressive`), explicitly warn about 2x quota cost.
-5. Submit async job, poll until completion, then return the final result to the user.
-6. Response style:
-   - Show clear "original -> rewritten" output for rewrite tasks.
-   - Show label/perplexity and short interpretation for detect tasks.
-   - If errors occur, explain actionable next steps in plain language.
+5. Submit async job, poll until completion, then return the final result.
+
+### API request mapping
+
+- Rewrite Chinese:
+ - `POST /api_v2/rewrite/chinese/jobs`
+ - Body: `{"text":"...","mode":"light|aggressive|weipu|weipu_aggressive"}`
+- Rewrite English:
+ - `POST /api_v2/rewrite/english/jobs`
+ - Body: `{"text":"..."}`
+- Detect Chinese:
+ - `POST /api_v2/detect/chinese/jobs`
+ - Body: `{"sentence":"..."}`
+- Detect English:
+ - `POST /api_v2/detect/english/jobs`
+ - Body: `{"sentence":"..."}`
+
+For all job endpoints, poll status at:
+
+- `GET <same-submit-path>/{task_id}`
+
+Stop polling on:
+
+- `data.status == "completed"`: return result to user.
+- `data.status == "failed"`: surface `error.code` and `error.message` with actionable guidance.
+
+### Headers and env vars
+
+- Header: `X-API-Key: $HUMANIZER_API_KEY`
+- Header: `Accept: application/json`
+- Optional `Content-Type: application/json` on POST
+- Base URL from `HUMANIZER_API_BASE_URL`, default `https://leahloveswriting.xyz`
 
 ## Choosing a Chinese rewrite mode
 
@@ -69,7 +96,7 @@ Rules of thumb:
 - Default to `light` if the user does not specify.
 - Pick `aggressive` only when the user says 力度大一点 / 降得狠一点 / 还是标红太多 — and **warn them it costs 2× quota** before submitting.
 - Pick `weipu` / `weipu_aggressive` only when the user explicitly targets 维普. Same 2× cost warning applies for `weipu_aggressive`.
-- English rewrite has a single mode and cost is always 1× word count.
+- English rewrite has a single mode; `--mode` is ignored and cost is always 1× word count.
 
 ## Interpreting detection results
 
