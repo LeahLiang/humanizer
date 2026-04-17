@@ -43,7 +43,7 @@ def _add_input_flags(parser: argparse.ArgumentParser) -> None:
 def _build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="humanizer",
-        description="Humanizer CLI — bypass AI detectors (CNKI / Weipu / Turnitin). Rewrite + detect.",
+        description="Humanizer CLI — rewrite text to lower AI-detector scores (CNKI / Weipu / Turnitin).",
     )
     p.add_argument("--base-url", default=None, help="Override API base URL.")
     p.add_argument("--timeout", type=float, default=DEFAULT_TIMEOUT)
@@ -66,11 +66,6 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     rewrite.add_argument("--json", action="store_true", help=argparse.SUPPRESS)
     _add_input_flags(rewrite)
-
-    detect = sub.add_parser("detect", help="Detect whether text is AI-generated.")
-    detect.add_argument("lang", choices=["zh", "en"])
-    detect.add_argument("--json", action="store_true", help=argparse.SUPPRESS)
-    _add_input_flags(detect)
 
     sub.add_parser("health", help="Call /api_v2/health.")
     return p
@@ -101,18 +96,6 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(data, ensure_ascii=False, indent=2))
             else:
                 print(data.get("result", ""))
-        elif args.command == "detect":
-            data = client.detect(text, args.lang)
-            if args.json:
-                print(json.dumps(data, ensure_ascii=False, indent=2))
-            else:
-                result = data.get("result", {}) or {}
-                analysis = result.get("analysis", {}) or {}
-                label = analysis.get("label", "unknown")
-                perplexity = analysis.get("perplexity")
-                print(f"label: {label}")
-                if perplexity is not None:
-                    print(f"perplexity: {perplexity}")
         return 0
     except HumanizerError as e:
         print(f"error: {e}", file=sys.stderr)

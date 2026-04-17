@@ -4,13 +4,13 @@
 
 > Humanize AI-generated text and bypass AI-content detectors — proven effective against **CNKI (知网)**, **Weipu (维普)**, **Turnitin**, and **GPTZero-style** detectors.
 >
-> 改写中英文文本，规避知网 / 维普 / Turnitin 等 AI 检测器，用于论文降重 / 降 AI 率 / AI 内容检测。
+> 改写中英文文本，规避知网 / 维普 / Turnitin 等 AI 检测器，用于论文降重 / 降 AI 率。
 
-A [Claude Code](https://claude.com/claude-code) skill that lets Claude rewrite passages to lower AI-detector scores and tell you whether a passage was AI-written, all via the `/api_v2` service behind [ushallpass.ai](https://ushallpass.ai).
+A [Claude Code](https://claude.com/claude-code) skill that lets Claude rewrite passages to lower AI-detector scores via the `/api_v2` service behind [ushallpass.ai](https://ushallpass.ai).
 
 - Works in Chinese **and** English.
 - Uses the official async job API (submit → poll → result).
-- Ships with zero-dependency Python scripts (split core + CLI) that you can also use without Claude.
+- Ships with two zero-dependency Python modules (API client + CLI) that you can also use without Claude.
 
 ---
 
@@ -19,14 +19,13 @@ A [Claude Code](https://claude.com/claude-code) skill that lets Claude rewrite p
 | Capability | Languages | Use case |
 |---|---|---|
 | Rewrite (lower AI score) | zh / en | Chinese targets CNKI and Weipu; English targets Turnitin and GPTZero-style detectors |
-| Detect AI-generated content | zh / en | Check whether a passage is more likely AI-written and return analysis |
 | Async handling built in | — | Claude handles submit → poll → final result automatically |
 
 ---
 
 ## 1. Getting an API key
 
-1. Register and log in at **<https://ushallpass.ai>** — this is where your account, quota, writing history and detection history live.
+1. Register and log in at **<https://ushallpass.ai>** — this is where your account, quota, and usage history live.
 2. In the top-right corner of the page, open the dropdown under your account name and click **Generate API Key**.
 3. Copy the plaintext key immediately — it is shown only once.
 4. Export it in your shell:
@@ -63,7 +62,7 @@ Verify it loaded:
 /skills
 ```
 
-You should see `humanizer` in the list. Claude will then invoke it automatically when the user asks things like *"帮我把这段降一下 AI 率"* or *"Humanize this paragraph to bypass Turnitin."*.
+You should see `humanizer` in the list. Claude will then invoke it automatically when the user asks things like *"帮我把这段降一下 AI 率"* or *"Humanize this paragraph to bypass Turnitin."* If you already cloned this repo before, just run `git pull` in that clone to update it.
 
 ---
 
@@ -76,7 +75,6 @@ You can send prompts like:
 - `Help me lower the AIGC score of this paragraph: ...`
 - `Rewrite this for Weipu with stronger intensity: ...`
 - `Humanize this paragraph to bypass Turnitin: ...`
-- `Check whether this paragraph was AI-written: ...`
 
 ---
 
@@ -141,13 +139,13 @@ The API returns errors as `{"success": false, "error": {"code": ..., "message": 
 
 ## 7. Quotas & billing
 
-Each API call runs through the account's normal quota. Usage, writing history and detection history are shared with the web app — log in at <https://ushallpass.ai> to audit everything and view the current pricing plan. Heavy Chinese rewrite modes (`aggressive`, `weipu_aggressive`) deduct **twice** the character count; see §5.
+Each API call runs through the account's normal quota. Usage is shared with the web app — log in at <https://ushallpass.ai> to audit everything and view the current pricing plan. Heavy Chinese rewrite modes (`aggressive`, `weipu_aggressive`) deduct **twice** the character count; see §5.
 
 ---
 
 ## 8. Privacy
 
-Text you submit is processed on ushallpass.ai's servers and stored in your account's writing / detection history (viewable at <https://ushallpass.ai>). Do **not** send content you are contractually forbidden from sharing with third parties.
+Text you submit is processed on ushallpass.ai's servers and may appear in your account records (viewable at <https://ushallpass.ai>). Do **not** send content you are contractually forbidden from sharing with third parties.
 
 ---
 
@@ -157,30 +155,30 @@ Text you submit is processed on ushallpass.ai's servers and stored in your accou
 
 ### CLI
 
+The command-line entrypoint is **`humanizer_cli.py`** (argparse and printing). **`humanizer_api.py`** holds `HumanizerClient`, which performs HTTP submit + poll. The examples below use `python3` because some environments do not provide a `python` alias.
+
 ```bash
 # Rewrite
-python scripts/humanizer_client.py rewrite zh --text "..."
-python scripts/humanizer_client.py rewrite zh --mode aggressive --text "..."
-python scripts/humanizer_client.py rewrite en --text "Text to humanize."
-
-# Detect
-python scripts/humanizer_client.py detect zh --text "待检测的中文文本"
+python3 scripts/humanizer_cli.py rewrite zh --text "..."
+python3 scripts/humanizer_cli.py rewrite zh --mode aggressive --text "..."
+python3 scripts/humanizer_cli.py rewrite en --text "Text to humanize."
 
 # From file / raw JSON output
-python scripts/humanizer_client.py rewrite zh --file input.txt
-python scripts/humanizer_client.py detect en --json --text "..."
+python3 scripts/humanizer_cli.py rewrite zh --file input.txt
+python3 scripts/humanizer_cli.py rewrite en --json --text "..."
 ```
 
 Global flags: `--base-url` (default `https://leahloveswriting.xyz`), `--timeout` (180s), `--poll-interval` (2s), `--json`. `--json` can be passed before or after subcommands. Exit codes: `0` success / `1` API or network error / `2` bad input.
 
 ### Python library
 
+Import the API module directly from your own scripts:
+
 ```python
-from scripts.humanizer_client import HumanizerClient
+from scripts.humanizer_api import HumanizerClient
 
 client = HumanizerClient()  # reads HUMANIZER_API_KEY from env
 print(client.rewrite("...", lang="zh", mode="aggressive")["result"])
-print(client.detect("Text to check.", lang="en")["result"]["analysis"])
 ```
 
 ---
@@ -189,14 +187,13 @@ print(client.detect("Text to check.", lang="en")["result"]["analysis"])
 
 ```
 humanizer/
-├── SKILL.md                        # Claude Code skill definition
+├── SKILL.md                        # Claude Code skill definition (markdown for the model, not executable code)
 ├── README.md                       # 简体中文版（默认）
 ├── README.en.md                    # This file
 ├── LICENSE
 └── scripts/
-    ├── humanizer_api.py            # API core (submit/poll/error handling)
-    ├── humanizer_cli.py            # CLI argument parsing and output
-    └── humanizer_client.py         # Compatibility entrypoint + exports
+    ├── humanizer_api.py            # Library: HTTP client (HumanizerClient)
+    └── humanizer_cli.py            # CLI: invokes humanizer_api
 ```
 
 ## License

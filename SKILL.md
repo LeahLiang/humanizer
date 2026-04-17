@@ -1,24 +1,31 @@
 ---
 name: humanizer
-description: Humanize AI-generated text to bypass AI-content detectors — proven effective against 知网 (CNKI), 维普 (Weipu), Turnitin, and GPTZero-style detectors in both Chinese and English. Also detects whether a passage is AI-written. 改写中英文文本降 AI 率 / 论文降重，有效规避知网、维普、Turnitin 等检测。Trigger on: humanize, bypass AI detector, 降 AI 率, 降重, 论文降重, 论文改写, 知网降重, 维普降重, Turnitin bypass, AI 检测, is this ChatGPT / AI-written.
+description: Humanize AI-generated text to bypass AI-content detectors — effective against CNKI (知网), Weipu (维普), Turnitin, and GPTZero-style detectors in Chinese and English. 改写中英文降 AI 率 / 论文降重。Trigger on: humanize, bypass AI detector, 降 AI 率, 降重, 论文降重, 论文改写, 知网降重, 维普降重, Turnitin bypass.
 ---
 
 # Humanizer Skill
 
-Rewrite Chinese or English text so it bypasses AI-content detectors — **CNKI (知网), Weipu (维普), Turnitin, GPTZero-style** — and detect whether a passage is AI-generated. Backed by the ushallpass.ai `/api_v2` service.
+Rewrite Chinese or English text so it reads more human and lowers scores on **CNKI (知网), Weipu (维普), Turnitin, GPTZero-style** detectors. Backed by the ushallpass.ai `/api_v2` service.
 
-Two capabilities:
+Endpoints are asynchronous: submit a job, then poll by `task_id`.
 
-1. **Rewrite (humanize)** — lowers the AI-detector score while preserving meaning.
-2. **Detect** — tells you whether a passage is likely AI-written.
+## Skill versus `scripts/` (two optional Python files)
 
-All endpoints are asynchronous: submit a job, then poll a task id.
+There are only **two** Python modules — **library** and **CLI** — plus this markdown skill:
+
+| What | Who reads it | What it does |
+|------|----------------|----------------|
+| **`SKILL.md` (this file)** | Claude / Cursor | Tells the model *when* to help, *how* to choose rewrite mode, and the minimal API contract needed for direct use in conversation. |
+| **`scripts/humanizer_api.py`** | Humans / CI | **Library**: stdlib HTTP client — `HumanizerClient`, submit + poll + `HumanizerError`. Import this from other Python code. |
+| **`scripts/humanizer_cli.py`** | Humans / CI | **CLI**: `argparse`, stdin / `--file` / `--text`, prints rewritten text or JSON. Run `python3 scripts/humanizer_cli.py …` from the repo root. |
+
+The Skill and the scripts use the **same API**. Keep product behavior aligned with `scripts/humanizer_api.py`; this file should stay focused on invocation rules, mode choice, and the minimal request/response shape Claude needs.
 
 ## Prerequisites
 
 The user must have:
 
-- A [ushallpass.ai](https://ushallpass.ai) account with an active API key (generated from the account page; writing / detection history also lives there).
+- A [ushallpass.ai](https://ushallpass.ai) account with an active API key (from the account page; usage history also lives there).
 - The API key exported as `HUMANIZER_API_KEY` in the environment.
 - Optionally `HUMANIZER_API_BASE_URL` (defaults to `https://leahloveswriting.xyz` — the API gateway host; do **not** change this unless self-hosting).
 
@@ -28,59 +35,47 @@ If the key is missing, stop and tell the user how to generate one (see `README.m
 
 Invoke when the user asks to:
 
-- Humanize / rewrite text to bypass AI detection (降 AI 率, 论文降重, 洗稿).
-- Lower a 知网 / 维普 / Turnitin detection score specifically.
-- Check whether a passage is AI-generated (AI 检测, is this ChatGPT?).
-- Batch-process a file of passages through either pipeline.
+- Humanize / rewrite text to lower AI-detector scores (降 AI 率, 论文降重, 洗稿).
+- Target 知网 / 维普 / Turnitin specifically.
 
-Do **not** invoke for general paraphrasing that can be done inline — this skill is for cases where the user specifically wants to lower an AI-detector score (the models are tuned for detector evasion, not stylistic rewriting).
+Do **not** invoke for general paraphrasing that can be done inline — this skill is for cases where the user wants detector-oriented rewriting (tuned for that use case, not generic style edits).
 
-## Execution workflow (API-first)
+## Execution workflow
 
-Handle requests through natural-language interaction, and execute via `/api_v2` directly.
+1. Identify language: Chinese (`zh`) or English (`en`).
+2. For Chinese rewrite, select mode from user intent:
+   - Default `light`.
+   - `aggressive` when the user wants a stronger rewrite.
+   - `weipu` / `weipu_aggressive` when the user explicitly targets 维普.
+3. Before heavy Chinese modes (`aggressive`, `weipu_aggressive`), explicitly warn about **2× quota** cost.
+4. If the input is empty or whitespace-only, stop and ask the user for actual text instead of submitting a request.
+5. Submit an async job, poll until completion, and return the final rewritten text. Return raw JSON only if the user asks.
 
-1. Identify intent:
- - Rewrite / humanize text to lower detector score.
- - Detect whether text is AI-generated.
-2. Identify language:
- - Chinese (`zh`) or English (`en`).
-3. For Chinese rewrite, select mode using user intent:
- - Default `light`.
- - `aggressive` when user asks for stronger rewrite.
- - `weipu` / `weipu_aggressive` when user explicitly targets 维普.
-4. Before heavy Chinese modes (`aggressive`, `weipu_aggressive`), explicitly warn about 2x quota cost.
-5. Submit async job, poll until completion, then return the final result.
-
-### API request mapping
+### Minimal API contract
 
 - Rewrite Chinese:
- - `POST /api_v2/rewrite/chinese/jobs`
- - Body: `{"text":"...","mode":"light|aggressive|weipu|weipu_aggressive"}`
+  - `POST /api_v2/rewrite/chinese/jobs`
+  - Body: `{"text":"...","mode":"light|aggressive|weipu|weipu_aggressive"}`
 - Rewrite English:
- - `POST /api_v2/rewrite/english/jobs`
- - Body: `{"text":"..."}`
-- Detect Chinese:
- - `POST /api_v2/detect/chinese/jobs`
- - Body: `{"sentence":"..."}`
-- Detect English:
- - `POST /api_v2/detect/english/jobs`
- - Body: `{"sentence":"..."}`
+  - `POST /api_v2/rewrite/english/jobs`
+  - Body: `{"text":"..."}`
 
-For all job endpoints, poll status at:
+Headers:
 
+- `X-API-Key: $HUMANIZER_API_KEY`
+- `Accept: application/json`
+- `Content-Type: application/json` on POST
+
+Poll status at:
 - `GET <same-submit-path>/{task_id}`
 
 Stop polling on:
 
-- `data.status == "completed"`: return result to user.
+- `data.status == "completed"`: return `result` (rewritten text) to the user.
 - `data.status == "failed"`: surface `error.code` and `error.message` with actionable guidance.
+- timeout / retry behavior should stay consistent with `scripts/humanizer_api.py`
 
-### Headers and env vars
-
-- Header: `X-API-Key: $HUMANIZER_API_KEY`
-- Header: `Accept: application/json`
-- Optional `Content-Type: application/json` on POST
-- Base URL from `HUMANIZER_API_BASE_URL`, default `https://leahloveswriting.xyz`
+Base URL comes from `HUMANIZER_API_BASE_URL`, default `https://leahloveswriting.xyz`.
 
 ## Choosing a Chinese rewrite mode
 
@@ -98,17 +93,6 @@ Rules of thumb:
 - Pick `weipu` / `weipu_aggressive` only when the user explicitly targets 维普. Same 2× cost warning applies for `weipu_aggressive`.
 - English rewrite has a single mode; `--mode` is ignored and cost is always 1× word count.
 
-## Interpreting detection results
-
-The detect endpoints return a `result.analysis` object:
-
-```json
-{ "analysis": { "label": "human", "perplexity": 23.18 }, "output": "..." }
-```
-
-- `label`: `"human"` or `"ai"` (some responses may omit it — report the perplexity and say label was unavailable).
-- `perplexity`: lower means more AI-like for these models. Report the raw number; do not invent thresholds.
-
 ## Error handling
 
 The API returns `{"success": false, "error": {"code": "...", "message": "..."}}`. The client raises with that message. Common codes:
@@ -122,4 +106,4 @@ Do not retry silently on `AUTH_ERROR` or `INVALID_PARAMETER`.
 
 ## Privacy note
 
-Submitted text is processed on ushallpass.ai's servers and logged to the user's writing / detection history (viewable by logging into <https://ushallpass.ai>). Warn the user before sending sensitive content (PII, unpublished manuscripts under NDA, etc.).
+Submitted text is processed on ushallpass.ai's servers and may appear in the user's account history (viewable by logging into <https://ushallpass.ai>). Warn the user before sending sensitive content (PII, unpublished manuscripts under NDA, etc.).

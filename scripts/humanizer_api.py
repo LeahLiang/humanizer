@@ -17,10 +17,6 @@ REWRITE_PATH = {
     "zh": "/api_v2/rewrite/chinese/jobs",
     "en": "/api_v2/rewrite/english/jobs",
 }
-DETECT_PATH = {
-    "zh": "/api_v2/detect/chinese/jobs",
-    "en": "/api_v2/detect/english/jobs",
-}
 VALID_ZH_MODES = {"light", "aggressive", "weipu", "weipu_aggressive"}
 
 
@@ -121,13 +117,6 @@ class HumanizerClient:
 
         submit_path = REWRITE_PATH[lang]
         task_id = self._submit(submit_path, body)
-        return self._poll(f"{submit_path}/{task_id}")
-
-    def detect(self, text: str, lang: str) -> dict:
-        if lang not in DETECT_PATH:
-            raise ValueError(f"lang must be one of {list(DETECT_PATH)}")
-        submit_path = DETECT_PATH[lang]
-        task_id = self._submit(submit_path, {"sentence": text})
         return self._poll(f"{submit_path}/{task_id}")
 
     def health(self) -> dict:

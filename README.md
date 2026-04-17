@@ -6,7 +6,7 @@
 >
 > Humanize AI-generated text to bypass CNKI / Weipu / Turnitin / GPTZero-style detectors, for both Chinese and English content.
 
-一个 [Claude Code](https://claude.com/claude-code) 技能（Skill），让 Claude 直接调用 [ushallpass.ai](https://ushallpass.ai) 背后的 `/api_v2` 服务，帮你完成 **降 AI 率改写**（论文降重 / humanize）和 **AI 内容检测**。
+一个 [Claude Code](https://claude.com/claude-code) 技能（Skill），让 Claude 直接调用 [ushallpass.ai](https://ushallpass.ai) 背后的 `/api_v2` 服务，帮你完成 **降 AI 率改写**（论文降重 / humanize）。
 
 - 支持中文、英文两种语言。
 - 使用官方异步任务 API（提交 → 轮询 → 取结果）。
@@ -19,14 +19,13 @@
 | 能力 | 语言 | 适用场景 |
 |---|---|---|
 | 改写（降 AI 率） | 中 / 英 | 中文面向知网（CNKI）、维普（Weipu）；英文面向 Turnitin、GPTZero 类检测器 |
-| AI 内容检测 | 中 / 英 | 判断一段文本是否更像 AI 生成，并返回分析结果 |
 | 自动异步处理 | — | Claude 自动完成“提交任务 → 轮询 → 返回结果”，你只需要给文本 |
 
 ---
 
 ## 1. 获取 API Key
 
-1. 在 **<https://ushallpass.ai>** 注册并登录——账号、额度、写作历史、检测历史都在这里。
+1. 在 **<https://ushallpass.ai>** 注册并登录——账号、额度、使用与写作历史都在这里。
 2. 打开网页右上角账户名下拉菜单，点击 **生成 API Key**。
 3. **立即**复制明文 key——它只会显示一次。
 4. 在 Shell 中导出为环境变量：
@@ -63,7 +62,7 @@ git clone https://github.com/LeahLiang/humanizer.git .claude/skills/humanizer
 /skills
 ```
 
-看到列表里有 `humanizer` 就说明成功了。之后当你说 "帮我把这段降一下知网的 AI 率"、"这段是不是 AI 写的" 之类的话，Claude 会自动调起这个 Skill。
+看到列表里有 `humanizer` 就说明成功了。之后当你说「帮我把这段降一下知网的 AI 率」之类的话，Claude 会自动调起这个 Skill。若你已经克隆过这个仓库，只需在对应目录里执行一次 `git pull` 更新即可。
 
 ---
 
@@ -76,7 +75,6 @@ git clone https://github.com/LeahLiang/humanizer.git .claude/skills/humanizer
 - `帮我降低下面这段话的 AIGC 率：……`
 - `针对维普改写下面这段，力度大一点：……`
 - `Humanize this paragraph to bypass Turnitin: ...`
-- `帮我检查这段是不是 AI 写的：……`
 
 ---
 
@@ -141,13 +139,13 @@ git clone https://github.com/LeahLiang/humanizer.git .claude/skills/humanizer
 
 ## 7. 配额与计费
 
-每次接口调用都会按账号的正常额度扣费。调用记录、写作历史、检测历史与网站 To C 完全共用，可登录 <https://ushallpass.ai> 查询，资费也在该网站的定价页。中文重度改写模式（`aggressive`、`weipu_aggressive`）会扣两倍字数，详见 §5。
+每次接口调用都会按账号的正常额度扣费。调用记录与网站 To C 共用，可登录 <https://ushallpass.ai> 查询，资费也在该网站的定价页。中文重度改写模式（`aggressive`、`weipu_aggressive`）会扣两倍字数，详见 §5。
 
 ---
 
 ## 8. 隐私说明
 
-提交的文本会在 ushallpass.ai 服务器上处理，并写入账号的写作 / 检测历史（可登录 <https://ushallpass.ai> 查看）。**请勿提交合同禁止外传的内容**（未公开稿件、含个人身份信息的数据等）。
+提交的文本会在 ushallpass.ai 服务器上处理，并可能写入账号侧记录（可登录 <https://ushallpass.ai> 查看）。**请勿提交合同禁止外传的内容**（未公开稿件、含个人身份信息的数据等）。
 
 ---
 
@@ -157,30 +155,30 @@ git clone https://github.com/LeahLiang/humanizer.git .claude/skills/humanizer
 
 ### CLI
 
+命令行入口是 **`humanizer_cli.py`**（只做参数与打印）；真正发请求的是 **`humanizer_api.py`** 里的 `HumanizerClient`。下面示例统一用 `python3`，避免某些环境里没有 `python` 别名。
+
 ```bash
 # 改写
-python scripts/humanizer_client.py rewrite zh --text "……"
-python scripts/humanizer_client.py rewrite zh --mode aggressive --text "……"
-python scripts/humanizer_client.py rewrite en --text "Text to humanize."
-
-# 检测
-python scripts/humanizer_client.py detect zh --text "待检测的中文文本"
+python3 scripts/humanizer_cli.py rewrite zh --text "……"
+python3 scripts/humanizer_cli.py rewrite zh --mode aggressive --text "……"
+python3 scripts/humanizer_cli.py rewrite en --text "Text to humanize."
 
 # 从文件读取 / 输出完整 JSON
-python scripts/humanizer_client.py rewrite zh --file input.txt
-python scripts/humanizer_client.py detect en --json --text "..."
+python3 scripts/humanizer_cli.py rewrite zh --file input.txt
+python3 scripts/humanizer_cli.py rewrite en --json --text "..."
 ```
 
 全局参数：`--base-url`（默认 `https://leahloveswriting.xyz`）、`--timeout`（默认 180s）、`--poll-interval`（默认 2s）、`--json`。`--json` 可放在子命令前或后。退出码：`0` 成功 / `1` 接口或网络错误 / `2` 输入不合法。
 
 ### Python 库
 
+在其他脚本里 **import 库文件** 即可，不必经过 CLI：
+
 ```python
-from scripts.humanizer_client import HumanizerClient
+from scripts.humanizer_api import HumanizerClient
 
 client = HumanizerClient()  # 读取 HUMANIZER_API_KEY 环境变量
 print(client.rewrite("……", lang="zh", mode="aggressive")["result"])
-print(client.detect("Text to check.", lang="en")["result"]["analysis"])
 ```
 
 ---
@@ -189,14 +187,13 @@ print(client.detect("Text to check.", lang="en")["result"]["analysis"])
 
 ```
 humanizer/
-├── SKILL.md                        # Claude Code 技能定义
+├── SKILL.md                        # Claude Code 技能定义（给模型看的说明，不是可执行代码）
 ├── README.md                       # 本文件（中文版）
 ├── README.en.md                    # English
 ├── LICENSE
 └── scripts/
-    ├── humanizer_api.py            # API 核心（提交任务 / 轮询 / 错误处理）
-    ├── humanizer_cli.py            # CLI 参数解析与输出格式
-    └── humanizer_client.py         # 兼容入口（对外导出 + CLI shim）
+    ├── humanizer_api.py            # 库：HTTP 客户端（HumanizerClient）
+    └── humanizer_cli.py            # CLI：命令行入口（内部调用 humanizer_api）
 ```
 
 ## License
