@@ -16,11 +16,11 @@
 
 ## 功能一览
 
-| 能力 | 接口 | 语言 | 针对检测器 | 模式 |
-|---|---|---|---|---|
-| 改写（降 AI 率） | `POST /api_v2/rewrite/{chinese,english}/jobs` | 中 / 英 | 中文：知网 (CNKI)、维普 (Weipu) · 英文：Turnitin、GPTZero 类 | 中文：`light`、`aggressive`、`weipu`、`weipu_aggressive` |
-| AI 内容检测 | `POST /api_v2/detect/{chinese,english}/jobs` | 中 / 英 | — | — |
-| 健康检查 | `GET /api_v2/health` | — | — | — |
+| 能力 | 语言 | 适用场景 |
+|---|---|---|
+| 改写（降 AI 率） | 中 / 英 | 中文面向知网（CNKI）、维普（Weipu）；英文面向 Turnitin、GPTZero 类检测器 |
+| AI 内容检测 | 中 / 英 | 判断一段文本是否更像 AI 生成，并返回分析结果 |
+| 自动异步处理 | — | Claude 自动完成“提交任务 → 轮询 → 返回结果”，你只需要给文本 |
 
 ---
 
@@ -69,24 +69,14 @@ git clone https://github.com/LeahLiang/humanizer.git .claude/skills/humanizer
 
 ## 3. 在 Claude Code 里怎么用
 
-直接用自然语言说，Claude 会自己选命令和参数。
+直接说需求就行，不需要记命令。Claude 会自动选模式并返回结果。
 
-- **中文改写（知网）** —— *"帮我把下面这段降一下知网的 AI 率，力度大一点：……"*
-  → Claude 会执行 `rewrite zh --mode aggressive`。
-- **中文改写（维普）** —— *"针对维普改写下面这段……"*
-  → Claude 会执行 `rewrite zh --mode weipu`（或 `weipu_aggressive`）。
-- **英文改写（Turnitin / GPTZero）** —— *"Humanize this paragraph to bypass Turnitin: ..."*
-  → Claude 会执行 `rewrite en`。
-- **AI 检测** —— *"帮我检查这段是不是 AI 写的"*
-  → Claude 会执行 `detect zh` 或 `detect en`。
-
-Claude 会替你轮询任务、等结果、再把最终内容回显出来。
-
-你可以直接像用户那样说：
+例如你可以直接发：
 
 - `帮我降低下面这段话的 AIGC 率：……`
 - `针对维普改写下面这段，力度大一点：……`
 - `Humanize this paragraph to bypass Turnitin: ...`
+- `帮我检查这段是不是 AI 写的：……`
 
 ---
 

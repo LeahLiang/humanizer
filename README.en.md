@@ -16,11 +16,11 @@ A [Claude Code](https://claude.com/claude-code) skill that lets Claude rewrite p
 
 ## Features
 
-| Capability | Endpoint | Languages | Detectors it targets | Modes |
-|---|---|---|---|---|
-| Rewrite (humanize) | `POST /api_v2/rewrite/{chinese,english}/jobs` | zh / en | zh: 知网 (CNKI), 维普 (Weipu) · en: Turnitin, GPTZero-style | zh: `light`, `aggressive`, `weipu`, `weipu_aggressive` |
-| Detect AI-generated | `POST /api_v2/detect/{chinese,english}/jobs` | zh / en | — | — |
-| Health check | `GET /api_v2/health` | — | — | — |
+| Capability | Languages | Use case |
+|---|---|---|
+| Rewrite (lower AI score) | zh / en | Chinese targets CNKI and Weipu; English targets Turnitin and GPTZero-style detectors |
+| Detect AI-generated content | zh / en | Check whether a passage is more likely AI-written and return analysis |
+| Async handling built in | — | Claude handles submit → poll → final result automatically |
 
 ---
 
@@ -69,18 +69,14 @@ You should see `humanizer` in the list. Claude will then invoke it automatically
 
 ## 3. Usage through Claude Code
 
-Just ask in natural language — Claude will pick the right command and mode.
+Just describe what you want in natural language. Claude chooses the mode and returns the result.
 
-- **Chinese rewrite (知网)** — *"帮我把下面这段降一下知网的 AI 率，力度大一点：……"*
-  → Claude runs `rewrite zh --mode aggressive`.
-- **Chinese rewrite (维普)** — *"针对维普改写下面这段……"*
-  → Claude runs `rewrite zh --mode weipu` (or `weipu_aggressive`).
-- **English rewrite (Turnitin / GPTZero)** — *"Humanize this paragraph to bypass Turnitin: ..."*
-  → Claude runs `rewrite en`.
-- **AI detection** — *"Check whether this paragraph was AI-written."*
-  → Claude runs `detect zh` or `detect en`.
+You can send prompts like:
 
-Claude polls the task for you and reports the finished output.
+- `Help me lower the AIGC score of this paragraph: ...`
+- `Rewrite this for Weipu with stronger intensity: ...`
+- `Humanize this paragraph to bypass Turnitin: ...`
+- `Check whether this paragraph was AI-written: ...`
 
 ---
 
