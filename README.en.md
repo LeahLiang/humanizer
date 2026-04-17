@@ -10,7 +10,7 @@ A [Claude Code](https://claude.com/claude-code) skill that lets Claude rewrite p
 
 - Works in Chinese **and** English.
 - Uses the official async job API (submit → poll → result).
-- Ships with a zero-dependency Python CLI (`humanizer_client.py`) that you can also use without Claude.
+- Ships with zero-dependency Python scripts (split core + CLI) that you can also use without Claude.
 
 ---
 
@@ -172,10 +172,10 @@ python scripts/humanizer_client.py detect zh --text "待检测的中文文本"
 
 # From file / raw JSON output
 python scripts/humanizer_client.py rewrite zh --file input.txt
-python scripts/humanizer_client.py detect en --text "..." --json
+python scripts/humanizer_client.py detect en --json --text "..."
 ```
 
-Global flags: `--base-url` (default `https://leahloveswriting.xyz`), `--timeout` (180s), `--poll-interval` (2s), `--json`. Exit codes: `0` success / `1` API or network error / `2` bad input.
+Global flags: `--base-url` (default `https://leahloveswriting.xyz`), `--timeout` (180s), `--poll-interval` (2s), `--json`. `--json` can be passed before or after subcommands. Exit codes: `0` success / `1` API or network error / `2` bad input.
 
 ### Python library
 
@@ -198,7 +198,9 @@ humanizer/
 ├── README.en.md                    # This file
 ├── LICENSE
 └── scripts/
-    └── humanizer_client.py         # CLI + Python client (no deps)
+    ├── humanizer_api.py            # API core (submit/poll/error handling)
+    ├── humanizer_cli.py            # CLI argument parsing and output
+    └── humanizer_client.py         # Compatibility entrypoint + exports
 ```
 
 ## License

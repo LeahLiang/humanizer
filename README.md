@@ -178,10 +178,10 @@ python scripts/humanizer_client.py detect zh --text "待检测的中文文本"
 
 # 从文件读取 / 输出完整 JSON
 python scripts/humanizer_client.py rewrite zh --file input.txt
-python scripts/humanizer_client.py detect en --text "..." --json
+python scripts/humanizer_client.py detect en --json --text "..."
 ```
 
-全局参数：`--base-url`（默认 `https://leahloveswriting.xyz`）、`--timeout`（默认 180s）、`--poll-interval`（默认 2s）、`--json`。退出码：`0` 成功 / `1` 接口或网络错误 / `2` 输入不合法。
+全局参数：`--base-url`（默认 `https://leahloveswriting.xyz`）、`--timeout`（默认 180s）、`--poll-interval`（默认 2s）、`--json`。`--json` 可放在子命令前或后。退出码：`0` 成功 / `1` 接口或网络错误 / `2` 输入不合法。
 
 ### Python 库
 
@@ -204,7 +204,9 @@ humanizer/
 ├── README.en.md                    # English
 ├── LICENSE
 └── scripts/
-    └── humanizer_client.py         # CLI + Python 客户端（零依赖）
+    ├── humanizer_api.py            # API 核心（提交任务 / 轮询 / 错误处理）
+    ├── humanizer_cli.py            # CLI 参数解析与输出格式
+    └── humanizer_client.py         # 兼容入口（对外导出 + CLI shim）
 ```
 
 ## License
