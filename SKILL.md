@@ -1,6 +1,6 @@
 ---
 name: humanizer
-description: Humanize AI-generated text to bypass AI-content detectors — effective against CNKI (知网), Weipu (维普), Turnitin, and GPTZero-style detectors in Chinese and English. 改写中英文降 AI 率 / 论文降重。Trigger on: humanize, bypass AI detector, 降 AI 率, 降重, 论文降重, 论文改写, 知网降重, 维普降重, Turnitin bypass.
+description: "Rewrite Chinese or English text to lower AI-detector scores for CNKI, Weipu, Turnitin, and GPTZero-style detectors. 改写中英文降 AI 率 / 论文降重。Trigger on: humanize, bypass AI detector, 降 AI 率, 降重, 论文降重, 论文改写, 知网降重, 维普降重, Turnitin bypass."
 ---
 
 # Humanizer Skill
@@ -8,18 +8,6 @@ description: Humanize AI-generated text to bypass AI-content detectors — effec
 Rewrite Chinese or English text so it reads more human and lowers scores on **CNKI (知网), Weipu (维普), Turnitin, GPTZero-style** detectors. Backed by the ushallpass.ai `/api_v2` service.
 
 Endpoints are asynchronous: submit a job, then poll by `task_id`.
-
-## Skill versus `scripts/` (two optional Python files)
-
-There are only **two** Python modules — **library** and **CLI** — plus this markdown skill:
-
-| What | Who reads it | What it does |
-|------|----------------|----------------|
-| **`SKILL.md` (this file)** | Claude / Cursor | Tells the model *when* to help, *how* to choose rewrite mode, and the minimal API contract needed for direct use in conversation. |
-| **`scripts/humanizer_api.py`** | Humans / CI | **Library**: stdlib HTTP client — `HumanizerClient`, submit + poll + `HumanizerError`. Import this from other Python code. |
-| **`scripts/humanizer_cli.py`** | Humans / CI | **CLI**: `argparse`, stdin / `--file` / `--text`, prints rewritten text or JSON. Run `python3 scripts/humanizer_cli.py …` from the repo root. |
-
-The Skill and the scripts use the **same API**. Keep product behavior aligned with `scripts/humanizer_api.py`; this file should stay focused on invocation rules, mode choice, and the minimal request/response shape Claude needs.
 
 ## Prerequisites
 
