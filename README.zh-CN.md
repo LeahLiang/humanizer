@@ -50,11 +50,11 @@
 ```bash
 # 用户级（所有项目都能用）
 mkdir -p ~/.claude/skills
-git clone https://github.com/<your-org>/humanizer.git ~/.claude/skills/humanizer
+git clone https://github.com/LeahLiang/humanizer.git ~/.claude/skills/humanizer
 
 # 或者项目级（只在当前仓库生效）
 mkdir -p .claude/skills
-git clone https://github.com/<your-org>/humanizer.git .claude/skills/humanizer
+git clone https://github.com/LeahLiang/humanizer.git .claude/skills/humanizer
 ```
 
 验证加载成功：

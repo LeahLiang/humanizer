@@ -50,11 +50,11 @@ Clone into your Claude Code skills directory (either user-level or project-level
 ```bash
 # User-level (available in every project)
 mkdir -p ~/.claude/skills
-git clone https://github.com/<your-org>/humanizer.git ~/.claude/skills/humanizer
+git clone https://github.com/LeahLiang/humanizer.git ~/.claude/skills/humanizer
 
 # Or project-level (only in this repo)
 mkdir -p .claude/skills
-git clone https://github.com/<your-org>/humanizer.git .claude/skills/humanizer
+git clone https://github.com/LeahLiang/humanizer.git .claude/skills/humanizer
 ```
 
 Verify it loaded:
